@@ -63,6 +63,10 @@ export class SpecialityService {
         });
     }
 
+    async updateFull(id: number, createSpecialityDto: CreateSpecialityDto) {
+        return this.update(id, createSpecialityDto);
+    }
+
     async remove(id: number) {
         await this.findOne(id);
         return this.dataService.specialty.delete({

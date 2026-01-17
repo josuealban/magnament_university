@@ -98,10 +98,45 @@ export class StudentService {
         });
     }
 
+    // PUT implementation (Full update)
+    async updateFull(id: number, updateStudentDto: CreateStudentDto) {
+        return this.update(id, updateStudentDto);
+    }
+
     async remove(id: number) {
         await this.findOne(id);
         return this.dataService.student.delete({
             where: { id },
+        });
+    }
+
+    // --- ACTIVIDAD PRÁCTICA ---
+
+    // Parte 1: Estudiantes activos junto con su carrera
+    async findActiveWithCareer() {
+        return this.dataService.student.findMany({
+            where: { isActive: true },
+            include: { career: true },
+        });
+    }
+
+    // Parte 2: Operaciones lógicas (Activos AND Carrera AND Matrícula en período)
+    async searchAdvanced(careerId: number, periodId: number) {
+        return this.dataService.student.findMany({
+            where: {
+                AND: [
+                    { isActive: true },
+                    { careerId: careerId },
+                    {
+                        enrollments: {
+                            some: {
+                                academicPeriodId: periodId
+                            }
+                        }
+                    }
+                ]
+            },
+            include: { career: true, enrollments: true }
         });
     }
 }

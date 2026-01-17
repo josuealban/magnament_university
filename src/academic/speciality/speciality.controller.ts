@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put } from '@nestjs/common';
 import { SpecialityService } from './speciality.service';
 import { CreateSpecialityDto } from './dto/create-speciality.dto';
 import { UpdateSpecialityDto } from './dto/update-speciality.dto';
@@ -28,9 +28,15 @@ export class SpecialityController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update a speciality' })
+    @ApiOperation({ summary: 'Update a speciality (Partial)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() updateSpecialityDto: UpdateSpecialityDto) {
         return this.specialityService.update(id, updateSpecialityDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a speciality (Full)' })
+    updateFull(@Param('id', ParseIntPipe) id: number, @Body() createSpecialityDto: CreateSpecialityDto) {
+        return this.specialityService.updateFull(id, createSpecialityDto);
     }
 
     @Delete(':id')

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put } from '@nestjs/common';
 import { AcademicPeriodService } from './academic-period.service';
 import { CreateAcademicPeriodDto } from './dto/create-academic-period.dto';
 import { UpdateAcademicPeriodDto } from './dto/update-academic-period.dto';
@@ -28,9 +28,15 @@ export class AcademicPeriodController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update an academic period' })
+    @ApiOperation({ summary: 'Update an academic period (Partial)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() updateAcademicPeriodDto: UpdateAcademicPeriodDto) {
         return this.academicPeriodService.update(id, updateAcademicPeriodDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update an academic period (Full)' })
+    updateFull(@Param('id', ParseIntPipe) id: number, @Body() createAcademicPeriodDto: CreateAcademicPeriodDto) {
+        return this.academicPeriodService.updateFull(id, createAcademicPeriodDto);
     }
 
     @Delete(':id')

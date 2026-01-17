@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put } from '@nestjs/common';
 import { SubjectService } from './subject.service';
 import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
@@ -21,6 +21,12 @@ export class SubjectController {
         return this.subjectService.findAll();
     }
 
+    @Get('career/:careerId')
+    @ApiOperation({ summary: 'List subjects by career (Parte 1)' })
+    findByCareer(@Param('careerId', ParseIntPipe) careerId: number) {
+        return this.subjectService.findByCareer(careerId);
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get a subject by ID' })
     findOne(@Param('id', ParseIntPipe) id: number) {
@@ -28,9 +34,15 @@ export class SubjectController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update a subject' })
+    @ApiOperation({ summary: 'Update a subject (Partial)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() updateSubjectDto: UpdateSubjectDto) {
         return this.subjectService.update(id, updateSubjectDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a subject (Full)' })
+    updateFull(@Param('id', ParseIntPipe) id: number, @Body() createSubjectDto: CreateSubjectDto) {
+        return this.subjectService.updateFull(id, createSubjectDto);
     }
 
     @Delete(':id')

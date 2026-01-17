@@ -84,10 +84,46 @@ export class TeacherService {
         });
     }
 
+    async updateFull(id: number, createTeacherDto: CreateTeacherDto) {
+        return this.update(id, createTeacherDto);
+    }
+
     async remove(id: number) {
         await this.findOne(id);
         return this.dataService.teacher.delete({
             where: { id },
+        });
+    }
+
+    // --- ACTIVIDAD PRÁCTICA ---
+
+    // Parte 1: Docentes que imparten más de una asignatura
+    async findMultiSubjectTeachers() {
+        // Since Prisma doesn't directly support having > 1 on counts in 'where' easily for relations in older versions,
+        // we use 'some' and then filter in JS or use a slightly more complex query if possible.
+        // Actually, for this task, filtering in the service is acceptable if direct ORM query is tricky.
+        // However, we can use findMany and then filter.
+        const teachers = await this.dataService.teacher.findMany({
+            include: { _count: { select: { subjects: true } } }
+        });
+        return teachers.filter(t => t._count.subjects > 1);
+    }
+
+    // Parte 2: Operaciones lógicas (Tiempo completo AND (Dictan asignaturas OR NOT inactivos))
+    async filterAdvanced() {
+        return this.dataService.teacher.findMany({
+            where: {
+                AND: [
+                    { employmentType: 'FULL_TIME' },
+                    {
+                        OR: [
+                            { subjects: { some: {} } },
+                            { isActive: { not: false } }
+                        ]
+                    }
+                ]
+            },
+            include: { subjects: true }
         });
     }
 }

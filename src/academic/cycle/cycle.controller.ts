@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put } from '@nestjs/common';
 import { CycleService } from './cycle.service';
 import { CreateCycleDto } from './dto/create-cycle.dto';
 import { UpdateCycleDto } from './dto/update-cycle.dto';
@@ -28,9 +28,15 @@ export class CycleController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update a cycle' })
+    @ApiOperation({ summary: 'Update a cycle (Partial)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() updateCycleDto: UpdateCycleDto) {
         return this.cycleService.update(id, updateCycleDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a cycle (Full)' })
+    updateFull(@Param('id', ParseIntPipe) id: number, @Body() createCycleDto: CreateCycleDto) {
+        return this.cycleService.updateFull(id, createCycleDto);
     }
 
     @Delete(':id')

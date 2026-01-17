@@ -11,9 +11,10 @@ export class EnrollmentService {
     async create(createEnrollmentDto: CreateEnrollmentDto) {
         const { studentId, subjectId, academicPeriodId } = createEnrollmentDto;
 
-        // 1. Verify student exists
+        // 1. Verify student exists AND is active
         const student = await this.dataService.student.findUnique({ where: { id: studentId } });
         if (!student) throw new NotFoundException(`Student with ID ${studentId} not found`);
+        if (!student.isActive) throw new BadRequestException(`Student with ID ${studentId} is NOT active`);
 
         // 2. Verify academic period exists and is active
         const period = await this.dataService.academicPeriod.findUnique({ where: { id: academicPeriodId } });
@@ -37,7 +38,7 @@ export class EnrollmentService {
         });
         if (existing) throw new ConflictException(`Student is already enrolled in this subject for this period`);
 
-        // 5. Build transaction to create enrollment and update quota
+        // 5. Build transaction to create enrollment and update quota (ACID)
         return this.dataService.$transaction(async (tx) => {
             const enrollment = await tx.enrollment.create({
                 data: createEnrollmentDto,
@@ -91,7 +92,6 @@ export class EnrollmentService {
             data: updateEnrollmentDto,
         });
     }
-
     async remove(id: number) {
         const enrollment = await this.findOne(id);
 
@@ -105,5 +105,41 @@ export class EnrollmentService {
 
             return { message: 'Enrollment deleted and quota restored' };
         });
+    }
+
+    async updateFull(id: number, createEnrollmentDto: CreateEnrollmentDto) {
+        return this.update(id, createEnrollmentDto);
+    }
+
+    // --- ACTIVIDAD PRÁCTICA ---
+
+    // Parte 1: Mostrar las matrículas de un estudiante en un período académico determinado
+    async findByStudentAndPeriod(studentId: number, periodId: number) {
+        return this.dataService.enrollment.findMany({
+            where: {
+                studentId,
+                academicPeriodId: periodId
+            },
+            include: {
+                student: true,
+                subject: true,
+                academicPeriod: true
+            }
+        });
+    }
+
+    // Parte 3: Consulta SQL Nativa (Reporte de materias por estudiante)
+    async getNativeStudentReport() {
+        return this.dataService.$queryRaw`
+            SELECT 
+                s.first_name || ' ' || s.last_name as "studentName",
+                c.name as "careerName",
+                COUNT(e.id) as "totalSubjects"
+            FROM students s
+            JOIN careers c ON s.career_id = c.id
+            LEFT JOIN enrollments e ON s.id = e.student_id
+            GROUP BY s.id, s.first_name, s.last_name, c.name
+            ORDER BY "totalSubjects" DESC
+        `;
     }
 }

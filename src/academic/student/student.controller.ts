@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put, Query } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
@@ -21,6 +21,21 @@ export class StudentController {
         return this.studentService.findAll();
     }
 
+    @Get('status/active')
+    @ApiOperation({ summary: 'List all active students with their career (Parte 1)' })
+    findActive() {
+        return this.studentService.findActiveWithCareer();
+    }
+
+    @Get('search/advanced')
+    @ApiOperation({ summary: 'Search students with logical operators (Parte 2)' })
+    searchAdvanced(
+        @Query('careerId', ParseIntPipe) careerId: number,
+        @Query('periodId', ParseIntPipe) periodId: number,
+    ) {
+        return this.studentService.searchAdvanced(careerId, periodId);
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get a student by ID' })
     findOne(@Param('id', ParseIntPipe) id: number) {
@@ -28,9 +43,15 @@ export class StudentController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update a student' })
+    @ApiOperation({ summary: 'Update a student (Partial)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() updateStudentDto: UpdateStudentDto) {
         return this.studentService.update(id, updateStudentDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a student (Full)' })
+    updateFull(@Param('id', ParseIntPipe) id: number, @Body() createStudentDto: CreateStudentDto) {
+        return this.studentService.updateFull(id, createStudentDto);
     }
 
     @Delete(':id')

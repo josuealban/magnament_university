@@ -6,7 +6,8 @@ import { PersistenceModule } from './prisma/persistence.module';
 
 // Academic Domain
 import { CycleModule } from './academic/cycle/cycle.module';
-import { SpecialtyModule } from './academic/specialty/specialty.module';
+import { SpecialityModule } from './academic/speciality/speciality.module';
+
 import { CareerModule } from './academic/career/career.module';
 import { SubjectModule } from './academic/subject/subject.module';
 import { TeacherModule } from './academic/teacher/teacher.module';
@@ -33,7 +34,7 @@ import { SystemLogModule } from './help/system-log/system-log.module';
 
     // Academic
     CycleModule,
-    SpecialtyModule,
+    SpecialityModule,
     CareerModule,
     SubjectModule,
     TeacherModule,

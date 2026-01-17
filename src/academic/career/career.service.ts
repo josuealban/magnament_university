@@ -78,6 +78,10 @@ export class CareerService {
         });
     }
 
+    async updateFull(id: number, createCareerDto: CreateCareerDto) {
+        return this.update(id, createCareerDto);
+    }
+
     async remove(id: number) {
         await this.findOne(id);
         return this.dataService.career.delete({

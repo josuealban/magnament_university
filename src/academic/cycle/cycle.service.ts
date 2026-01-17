@@ -84,6 +84,10 @@ export class CycleService {
         });
     }
 
+    async updateFull(id: number, createCycleDto: CreateCycleDto) {
+        return this.update(id, createCycleDto);
+    }
+
     async remove(id: number) {
         await this.findOne(id);
         return this.dataService.cycle.delete({

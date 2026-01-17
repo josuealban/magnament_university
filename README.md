@@ -1,98 +1,60 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Gestión Universitaria - NestJS (Actividad Práctica CLASE 3)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Este proyecto es una implementación avanzada de un sistema de gestión universitaria utilizando **NestJS** y **Prisma ORM** (v7.0.1). El sistema está diseñado sobre una arquitectura multi-base de datos (Academic, Security, Help) y cumple con los requerimientos de la Actividad Práctica - CLASE 3.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Funcionalidades Implementadas
 
-## Description
+### 1. Consultas Avanzadas (ORM)
+Se implementaron métodos personalizados en los servicios para extraer información específica:
+- **Estudiantes**: Lista de estudiantes activos vinculados a sus respectivas carreras.
+- **Asignaturas**: Filtrado de materias asociadas a una carrera académica particular.
+- **Docentes**: Identificación de docentes que imparten más de una asignatura.
+- **Matrículas**: Consulta de matrículas de un estudiante filtradas por un período académico específico.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### 2. Operaciones Lógicas
+Implementación de filtros complejos en la capa de persistencia:
+- **Estudiantes**: Búsqueda que combina el estado activo, la carrera y la existencia de matrículas en un período.
+- **Docentes**: Relación de docentes de tiempo completo que cumplen con criterios de carga académica o estado de actividad.
 
-## Project setup
+### 3. Reporte de SQL Nativo
+Implementación de una consulta compleja utilizando `$queryRaw` para generar un reporte estadístico:
+- **Campos**: Nombre del Estudiante, Carrera, Total de Materias Matriculadas.
+- **Orden**: Descendente por cantidad de materias.
 
-```bash
-$ npm install
-```
+### 4. Transacción ACID de Matrícula
+El proceso de inscripción de estudiantes (`EnrollmentService.create`) se ha diseñado siguiendo los principios ACID:
+- **Validaciones**: Verificación de estado del alumno, vigencia del período y disponibilidad de cupos.
+- **Atomicidad**: Uso de `$transaction` para asegurar que el registro de matrícula y la actualización del inventario de cupos ocurran simultáneamente o fallen en conjunto.
 
-## Compile and run the project
+### 5. Documentación de Principios ACID
+Se incluye un análisis detallado de la aplicación de Atomicity, Consistency, Isolation y Durability en el archivo `ACID_ANALYSIS.md`.
 
-```bash
-# development
-$ npm run start
+### 6. Estandarización de la API
+Todos los controladores de la capa académica han sido mejorados con métodos `PUT` para permitir actualizaciones completas de los recursos, siguiendo los estándares RESTful.
 
-# watch mode
-$ npm run start:dev
+## Tecnologías Utilizadas
+- **Framework**: NestJS
+- **ORM**: Prisma 7.0.1
+- **Base de Datos**: PostgreSQL
+- **Documentación**: Swagger/OpenAPI
 
-# production mode
-$ npm run start:prod
-```
+## Configuración y Ejecución
 
-## Run tests
+1. Configurar las variables de entorno en el archivo `.env`.
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
+3. Generar clientes de Prisma:
+   ```bash
+   npx prisma generate --schema=prisma/academic/schema-academic.prisma
+   npx prisma generate --schema=prisma/security/schema-security.prisma
+   npx prisma generate --schema=prisma/help/schema-help.prisma
+   ```
+4. Iniciar la aplicación:
+   ```bash
+   npm run start:dev
+   ```
 
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+*Este proyecto fue desarrollado como parte de la formación avanzada en NestJS.*

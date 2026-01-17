@@ -93,6 +93,10 @@ export class AcademicPeriodService {
         });
     }
 
+    async updateFull(id: number, createAcademicPeriodDto: CreateAcademicPeriodDto) {
+        return this.update(id, createAcademicPeriodDto);
+    }
+
     async remove(id: number) {
         await this.findOne(id);
         return this.dataService.academicPeriod.delete({

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, Put } from '@nestjs/common';
 import { CareerService } from './career.service';
 import { CreateCareerDto } from './dto/create-career.dto';
 import { UpdateCareerDto } from './dto/update-career.dto';
@@ -28,9 +28,15 @@ export class CareerController {
     }
 
     @Patch(':id')
-    @ApiOperation({ summary: 'Update a career' })
+    @ApiOperation({ summary: 'Update a career (Partial)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() updateCareerDto: UpdateCareerDto) {
         return this.careerService.update(id, updateCareerDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Update a career (Full)' })
+    updateFull(@Param('id', ParseIntPipe) id: number, @Body() createCareerDto: CreateCareerDto) {
+        return this.careerService.updateFull(id, createCareerDto);
     }
 
     @Delete(':id')
