@@ -14,10 +14,11 @@ export class AcademicPeriodService {
         });
 
         if (existing) {
-            throw new ConflictException(`Academic period with name ${createAcademicPeriodDto.name} already exists`);
+            throw new ConflictException(
+                `Academic period with name ${createAcademicPeriodDto.name} already exists`,
+            );
         }
 
-        // If making this one active, deactivate others (optional business logic)
         if (createAcademicPeriodDto.isActive) {
             await this.dataService.academicPeriod.updateMany({
                 where: { isActive: true },
@@ -60,12 +61,14 @@ export class AcademicPeriodService {
             const existing = await this.dataService.academicPeriod.findFirst({
                 where: {
                     name: updateAcademicPeriodDto.name,
-                    id: { not: id }
+                    id: { not: id },
                 },
             });
 
             if (existing) {
-                throw new ConflictException(`Academic period with name ${updateAcademicPeriodDto.name} already exists`);
+                throw new ConflictException(
+                    `Academic period with name ${updateAcademicPeriodDto.name} already exists`,
+                );
             }
         }
 
@@ -80,8 +83,12 @@ export class AcademicPeriodService {
             where: { id },
             data: {
                 ...updateAcademicPeriodDto,
-                ...(updateAcademicPeriodDto.startDate ? { startDate: new Date(updateAcademicPeriodDto.startDate) } : {}),
-                ...(updateAcademicPeriodDto.endDate ? { endDate: new Date(updateAcademicPeriodDto.endDate) } : {}),
+                ...(updateAcademicPeriodDto.startDate
+                    ? { startDate: new Date(updateAcademicPeriodDto.startDate) }
+                    : {}),
+                ...(updateAcademicPeriodDto.endDate
+                    ? { endDate: new Date(updateAcademicPeriodDto.endDate) }
+                    : {}),
             },
         });
     }

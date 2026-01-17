@@ -1,8 +1,8 @@
-import "dotenv/config";
-import { defineConfig } from "prisma/config";
+import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
+    schema: "prisma/academic/schema-academic.prisma",
     datasource: {
-        url: process.env.DATABASE_ACADEMIC_URL || "",
+        url: env("DATABASE_ACADEMIC_URL"),
     },
 });
