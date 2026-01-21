@@ -1,12 +1,16 @@
-generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client-security"
-}
-
 datasource db {
   provider = "postgresql"
-  
 }
+
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./../../src/generated/client-security"
+  engineType      = "binary"
+  binaryTargets   = ["native"]
+}
+
+
 
 model User {
   id        Int       @id @default(autoincrement())

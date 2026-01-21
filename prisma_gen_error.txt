@@ -1,0 +1,11 @@
+
+> reinicio_uni@0.0.1 prisma:generate
+> npm run prisma:generate:security && npm run prisma:generate:academic && npm run prisma:generate:help
+
+
+> reinicio_uni@0.0.1 prisma:generate:security
+> npx prisma generate --config=prisma-config/security.config.ts
+
+Loaded Prisma config from prisma-config\security.config.ts.
+
+Error: Could not load schema from `C:\dev\reinicio_uni\prisma-config\prisma\security\schema-security.prisma` provided by "prisma.config.ts"`: file or directory not found

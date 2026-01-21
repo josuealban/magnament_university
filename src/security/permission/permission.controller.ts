@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, ApiTags, ApiOperation } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PermissionService } from './permission.service';
 import { CreatePermissionDto } from './dto/permission.dto';
 

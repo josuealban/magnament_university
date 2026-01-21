@@ -1,0 +1,144 @@
+{
+    "info": {
+        "name": "Security - Role",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Get All Roles",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/security/roles",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "security",
+                        "roles"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 2xx\", function () {",
+                            "    pm.response.to.have.status(/^2/);",
+                            "});",
+                            "",
+                            "pm.test(\"Response time is less than 500ms\", function () {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Create Role",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"name\": \"Admin\",\n  \"description\": \"Administrator\"\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/security/roles",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "security",
+                        "roles"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 2xx\", function () {",
+                            "    pm.response.to.have.status(/^2/);",
+                            "});",
+                            "",
+                            "pm.test(\"Response time is less than 500ms\", function () {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Grant Permission to Role",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"roleId\": 1,\n  \"permissionId\": 1\n}"
+                },
+                "url": {
+                    "raw": "{{baseUrl}}/security/roles/permissions",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "security",
+                        "roles",
+                        "permissions"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test(\"Status code is 2xx\", function () {",
+                            "    pm.response.to.have.status(/^2/);",
+                            "});",
+                            "",
+                            "pm.test(\"Response time is less than 500ms\", function () {",
+                            "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}

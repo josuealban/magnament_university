@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, ApiTags, ApiOperation } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { RoleService } from './role.service';
 import { CreateRoleDto, GrantPermissionDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
