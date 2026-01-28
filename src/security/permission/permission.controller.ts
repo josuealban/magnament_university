@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PermissionService } from './permission.service';
 import { CreatePermissionDto } from './dto/permission.dto';
@@ -18,5 +18,17 @@ export class PermissionController {
     @ApiOperation({ summary: 'Listar todos los permisos' })
     findAll() {
         return this.permissionService.listAll();
+    }
+
+    @Patch(':id')
+    @ApiOperation({ summary: 'Actualizar permiso' })
+    update(@Param('id', ParseIntPipe) id: number, @Body() dto: any) {
+        return this.permissionService.update(id, dto);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Eliminar permiso' })
+    remove(@Param('id', ParseIntPipe) id: number) {
+        return this.permissionService.remove(id);
     }
 }

@@ -11,35 +11,35 @@ export class EnrollmentService {
     async create(createEnrollmentDto: CreateEnrollmentDto) {
         const { studentId, subjectId, academicPeriodId } = createEnrollmentDto;
 
-        // 1. Verify student exists AND is active
-        const student = await this.dataService.student.findUnique({ where: { id: studentId } });
-        if (!student) throw new NotFoundException(`Student with ID ${studentId} not found`);
-        if (!student.isActive) throw new BadRequestException(`Student with ID ${studentId} is NOT active`);
-
-        // 2. Verify academic period exists and is active
-        const period = await this.dataService.academicPeriod.findUnique({ where: { id: academicPeriodId } });
-        if (!period) throw new NotFoundException(`Academic period with ID ${academicPeriodId} not found`);
-        if (!period.isActive) throw new BadRequestException(`Academic period with ID ${academicPeriodId} is not active`);
-
-        // 3. Verify subject exists and has quota
-        const subject = await this.dataService.subject.findUnique({ where: { id: subjectId } });
-        if (!subject) throw new NotFoundException(`Subject with ID ${subjectId} not found`);
-        if (subject.availableQuota <= 0) throw new BadRequestException(`No available quota for subject ${subject.name}`);
-
-        // 4. Verify no duplicate enrollment
-        const existing = await this.dataService.enrollment.findUnique({
-            where: {
-                studentId_subjectId_academicPeriodId: {
-                    studentId,
-                    subjectId,
-                    academicPeriodId,
-                },
-            },
-        });
-        if (existing) throw new ConflictException(`Student is already enrolled in this subject for this period`);
-
-        // 5. Build transaction to create enrollment and update quota (ACID)
         return this.dataService.$transaction(async (tx) => {
+            // 1. Verify student exists AND is active
+            const student = await tx.student.findUnique({ where: { id: studentId } });
+            if (!student) throw new NotFoundException(`Student with ID ${studentId} not found`);
+            if (!student.isActive) throw new BadRequestException(`Student with ID ${studentId} is NOT active`);
+
+            // 2. Verify academic period exists and is active
+            const period = await tx.academicPeriod.findUnique({ where: { id: academicPeriodId } });
+            if (!period) throw new NotFoundException(`Academic period with ID ${academicPeriodId} not found`);
+            if (!period.isActive) throw new BadRequestException(`Academic period with ID ${academicPeriodId} is not active`);
+
+            // 3. Verify subject exists and has quota
+            const subject = await tx.subject.findUnique({ where: { id: subjectId } });
+            if (!subject) throw new NotFoundException(`Subject with ID ${subjectId} not found`);
+            if (subject.availableQuota <= 0) throw new BadRequestException(`No available quota for subject ${subject.name}`);
+
+            // 4. Verify no duplicate enrollment
+            const existing = await tx.enrollment.findUnique({
+                where: {
+                    studentId_subjectId_academicPeriodId: {
+                        studentId,
+                        subjectId,
+                        academicPeriodId,
+                    },
+                },
+            });
+            if (existing) throw new ConflictException(`Student is already enrolled in this subject for this period`);
+
+            // 5. Create enrollment and update quota
             const enrollment = await tx.enrollment.create({
                 data: createEnrollmentDto,
             });
@@ -81,21 +81,48 @@ export class EnrollmentService {
     }
 
     async update(id: number, updateEnrollmentDto: UpdateEnrollmentDto) {
-        // Note: Updating an enrollment is complex because of quota management.
-        // For now, only allowing updates to non-ID fields if any existed,
-        // but the model only has foreign keys. If keys change, it's safer to re-create.
-        const current = await this.findOne(id);
+        return this.dataService.$transaction(async (tx) => {
+            const current = await tx.enrollment.findUnique({
+                where: { id },
+                include: { subject: true }
+            });
 
-        // Simplification: just update as requested if data provided
-        return this.dataService.enrollment.update({
-            where: { id },
-            data: updateEnrollmentDto,
+            if (!current) throw new NotFoundException(`Enrollment with ID ${id} not found`);
+
+            // If subject changes, handle quota transfer
+            if (updateEnrollmentDto.subjectId && updateEnrollmentDto.subjectId !== current.subjectId) {
+                // Verify new subject has quota
+                const newSubject = await tx.subject.findUnique({
+                    where: { id: updateEnrollmentDto.subjectId }
+                });
+                if (!newSubject) throw new NotFoundException(`New subject with ID ${updateEnrollmentDto.subjectId} not found`);
+                if (newSubject.availableQuota <= 0) throw new BadRequestException(`No available quota for new subject ${newSubject.name}`);
+
+                // 1. Restore quota to old subject
+                await tx.subject.update({
+                    where: { id: current.subjectId },
+                    data: { availableQuota: { increment: 1 } }
+                });
+
+                // 2. Deduct quota from new subject
+                await tx.subject.update({
+                    where: { id: updateEnrollmentDto.subjectId },
+                    data: { availableQuota: { decrement: 1 } }
+                });
+            }
+
+            return tx.enrollment.update({
+                where: { id },
+                data: updateEnrollmentDto,
+            });
         });
     }
-    async remove(id: number) {
-        const enrollment = await this.findOne(id);
 
+    async remove(id: number) {
         return this.dataService.$transaction(async (tx) => {
+            const enrollment = await tx.enrollment.findUnique({ where: { id } });
+            if (!enrollment) throw new NotFoundException(`Enrollment with ID ${id} not found`);
+
             await tx.enrollment.delete({ where: { id } });
 
             await tx.subject.update({

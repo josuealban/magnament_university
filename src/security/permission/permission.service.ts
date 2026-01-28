@@ -16,4 +16,12 @@ export class PermissionService {
     async listAll() {
         return this.securityDb.permission.findMany();
     }
+
+    async update(id: number, dto: any) {
+        return this.securityDb.permission.update({ where: { id }, data: dto });
+    }
+
+    async remove(id: number) {
+        return this.securityDb.permission.delete({ where: { id } });
+    }
 }

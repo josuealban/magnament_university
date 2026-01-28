@@ -19,19 +19,21 @@ export class AcademicPeriodService {
             );
         }
 
-        if (createAcademicPeriodDto.isActive) {
-            await this.dataService.academicPeriod.updateMany({
-                where: { isActive: true },
-                data: { isActive: false },
-            });
-        }
+        return this.dataService.$transaction(async (tx) => {
+            if (createAcademicPeriodDto.isActive) {
+                await tx.academicPeriod.updateMany({
+                    where: { isActive: true },
+                    data: { isActive: false },
+                });
+            }
 
-        return this.dataService.academicPeriod.create({
-            data: {
-                ...createAcademicPeriodDto,
-                startDate: new Date(createAcademicPeriodDto.startDate),
-                endDate: new Date(createAcademicPeriodDto.endDate),
-            },
+            return tx.academicPeriod.create({
+                data: {
+                    ...createAcademicPeriodDto,
+                    startDate: new Date(createAcademicPeriodDto.startDate),
+                    endDate: new Date(createAcademicPeriodDto.endDate),
+                },
+            });
         });
     }
 
@@ -55,41 +57,44 @@ export class AcademicPeriodService {
     }
 
     async update(id: number, updateAcademicPeriodDto: UpdateAcademicPeriodDto) {
-        await this.findOne(id);
+        return this.dataService.$transaction(async (tx) => {
+            const current = await tx.academicPeriod.findUnique({ where: { id } });
+            if (!current) throw new NotFoundException(`Academic period with ID ${id} not found`);
 
-        if (updateAcademicPeriodDto.name) {
-            const existing = await this.dataService.academicPeriod.findFirst({
-                where: {
-                    name: updateAcademicPeriodDto.name,
-                    id: { not: id },
+            if (updateAcademicPeriodDto.name) {
+                const existing = await tx.academicPeriod.findFirst({
+                    where: {
+                        name: updateAcademicPeriodDto.name,
+                        id: { not: id },
+                    },
+                });
+
+                if (existing) {
+                    throw new ConflictException(
+                        `Academic period with name ${updateAcademicPeriodDto.name} already exists`,
+                    );
+                }
+            }
+
+            if (updateAcademicPeriodDto.isActive) {
+                await tx.academicPeriod.updateMany({
+                    where: { isActive: true, id: { not: id } },
+                    data: { isActive: false },
+                });
+            }
+
+            return tx.academicPeriod.update({
+                where: { id },
+                data: {
+                    ...updateAcademicPeriodDto,
+                    ...(updateAcademicPeriodDto.startDate
+                        ? { startDate: new Date(updateAcademicPeriodDto.startDate) }
+                        : {}),
+                    ...(updateAcademicPeriodDto.endDate
+                        ? { endDate: new Date(updateAcademicPeriodDto.endDate) }
+                        : {}),
                 },
             });
-
-            if (existing) {
-                throw new ConflictException(
-                    `Academic period with name ${updateAcademicPeriodDto.name} already exists`,
-                );
-            }
-        }
-
-        if (updateAcademicPeriodDto.isActive) {
-            await this.dataService.academicPeriod.updateMany({
-                where: { isActive: true, id: { not: id } },
-                data: { isActive: false },
-            });
-        }
-
-        return this.dataService.academicPeriod.update({
-            where: { id },
-            data: {
-                ...updateAcademicPeriodDto,
-                ...(updateAcademicPeriodDto.startDate
-                    ? { startDate: new Date(updateAcademicPeriodDto.startDate) }
-                    : {}),
-                ...(updateAcademicPeriodDto.endDate
-                    ? { endDate: new Date(updateAcademicPeriodDto.endDate) }
-                    : {}),
-            },
         });
     }
 

@@ -32,4 +32,8 @@ export class RoleService {
             data: dto,
         });
     }
+
+    async removeRole(id: number) {
+        return this.securityDb.role.delete({ where: { id } });
+    }
 }

@@ -66,4 +66,36 @@ export class UserService {
             },
         });
     }
+
+    async findAll() {
+        return this.securityDb.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                username: true,
+                isActive: true,
+                createdAt: true,
+            },
+        });
+    }
+
+    async update(id: number, dto: Partial<CreateUserDto>) {
+        await this.findById(id);
+        const data: any = { ...dto };
+        if (dto.password) {
+            const salt = await bcrypt.genSalt();
+            data.password = await bcrypt.hash(dto.password, salt);
+        }
+        return this.securityDb.user.update({
+            where: { id },
+            data,
+            select: { id: true, name: true, email: true, username: true, isActive: true }
+        });
+    }
+
+    async remove(id: number) {
+        await this.findById(id);
+        return this.securityDb.user.delete({ where: { id } });
+    }
 }
