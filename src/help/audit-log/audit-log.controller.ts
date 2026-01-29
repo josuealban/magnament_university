@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { AuditLogService } from './audit-log.service';
 import { CreateAuditLogDto } from './dto/create-audit-log.dto';
 
@@ -14,6 +14,14 @@ export class AuditLogController {
   @Get()
   findAll() {
     return this.auditLogService.findAll();
+  }
+
+  @Get('search/advanced')
+  search(
+    @Query('action') action: string,
+    @Query('resource') resource: string
+  ) {
+    return this.auditLogService.searchAdvanced(action, resource);
   }
 
   @Get(':entity/:id')

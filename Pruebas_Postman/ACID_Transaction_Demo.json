@@ -1,0 +1,45 @@
+{
+    "info": {
+        "_postman_id": "acid-demo-123",
+        "name": "ACID Transaction Demo",
+        "description": "Demostración del principio de Atomicidad. Esta petición crea una matrícula Y descuenta cupo en una sola transacción.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Crear Matrícula (Transacción ACID)",
+            "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"studentId\": 1,\n    \"subjectId\": 1,\n    \"academicPeriodId\": 1\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/academic/enrollments",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "academic",
+                        "enrollments"
+                    ]
+                },
+                "description": "Esta petición ejecuta enrollment.service.ts -> create(). Si tiene éxito, crea la matrícula Y reduce el cupo del curso. Si algo falla, ninguna de las dos cosas sucede."
+            },
+            "response": []
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ]
+}

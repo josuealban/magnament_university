@@ -157,16 +157,21 @@ export class EnrollmentService {
 
     // Parte 3: Consulta SQL Nativa (Reporte de materias por estudiante)
     async getNativeStudentReport() {
-        return this.dataService.$queryRaw`
-            SELECT 
-                s.first_name || ' ' || s.last_name as "studentName",
-                c.name as "careerName",
-                COUNT(e.id) as "totalSubjects"
-            FROM students s
-            JOIN careers c ON s.career_id = c.id
-            LEFT JOIN enrollments e ON s.id = e.student_id
-            GROUP BY s.id, s.first_name, s.last_name, c.name
-            ORDER BY "totalSubjects" DESC
-        `;
+        try {
+            return await this.dataService.$queryRaw`
+                SELECT 
+                    s.first_name || ' ' || s.last_name as "studentName",
+                    c.name as "careerName",
+                    COUNT(e.id)::int as "totalSubjects"
+                FROM students s
+                JOIN careers c ON s.career_id = c.id
+                LEFT JOIN enrollments e ON s.id = e.student_id
+                GROUP BY s.id, s.first_name, s.last_name, c.name
+                ORDER BY "totalSubjects" DESC
+            `;
+        } catch (error) {
+            console.error('Error in native report:', error);
+            throw error;
+        }
     }
 }

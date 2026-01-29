@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, ParseIntPipe, Body, Patch, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Param, ParseIntPipe, Body, Patch, Delete, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -30,6 +30,12 @@ export class UserController {
     @ApiOperation({ summary: 'Actualizar usuario' })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: any) {
         return this.users.update(id, dto);
+    }
+
+    @Get('search/advanced')
+    @ApiOperation({ summary: 'Búsqueda avanzada de usuarios' })
+    search(@Query('username') username: string, @Query('role') role: string) {
+        return this.users.searchAdvanced(username, role);
     }
 
     @Delete(':id')

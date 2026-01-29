@@ -1,9 +1,15 @@
 import "dotenv/config";
 import { PrismaClient } from "../../src/generated/client-security";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_SECURITY_URL ?? process.env.DATABASE_URL ?? "",
+});
 
 async function main() {
-    const prisma = new PrismaClient();
+    const prisma = new PrismaClient({ adapter });
 
+    // Limpieza en orden correcto por FK
     await prisma.rolePermission.deleteMany();
     await prisma.userRole.deleteMany();
     await prisma.permission.deleteMany();
@@ -27,7 +33,7 @@ async function main() {
             name: "Admin",
             email: "admin@uni.edu",
             username: "admin",
-            password: "hashed-demo", // si luego quieres bcrypt real, lo hacemos
+            password: "hashed-demo",
             isActive: true,
         },
     });
@@ -41,6 +47,6 @@ async function main() {
 }
 
 main().catch(async (e) => {
-    console.error(e);
+    console.error("❌ Security seed error:", e);
     process.exit(1);
 });

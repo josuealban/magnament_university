@@ -32,4 +32,21 @@ export class AuditLogService {
             orderBy: { createdAt: 'desc' },
         });
     }
+
+    // --- ACTIVIDAD PRÁCTICA ---
+
+    // Parte 2: Operaciones lógicas (Action AND Resource AND Recientes)
+    async searchAdvanced(action: string, resource: string) {
+        const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        return this.helpDb.auditLog.findMany({
+            where: {
+                AND: [
+                    { action: { contains: action, mode: 'insensitive' } },
+                    { resource: { contains: resource, mode: 'insensitive' } },
+                    { createdAt: { gte: last24Hours } }
+                ]
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
 }

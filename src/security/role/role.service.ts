@@ -36,4 +36,22 @@ export class RoleService {
     async removeRole(id: number) {
         return this.securityDb.role.delete({ where: { id } });
     }
+
+    // --- ACTIVIDAD PRÁCTICA ---
+
+    // Parte 2: Operaciones lógicas (Roles que tienen un permiso específico)
+    async findByPermission(permissionName: string) {
+        return this.securityDb.role.findMany({
+            where: {
+                permissions: {
+                    some: {
+                        permission: {
+                            name: { contains: permissionName, mode: 'insensitive' }
+                        }
+                    }
+                }
+            },
+            include: { permissions: { include: { permission: true } } }
+        });
+    }
 }

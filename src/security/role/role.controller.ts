@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Delete, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { RoleService } from './role.service';
 import { CreateRoleDto, GrantPermissionDto } from './dto/create-role.dto';
@@ -21,9 +21,21 @@ export class RoleController {
         return this.roles.getAllRoles();
     }
 
+    @Get('filter/permission')
+    @ApiOperation({ summary: 'Filtrar roles por permiso' })
+    filter(@Query('name') name: string) {
+        return this.roles.findByPermission(name);
+    }
+
     @Post('permissions')
     @ApiOperation({ summary: 'Otorgar permiso a un rol' })
     authorize(@Body() dto: GrantPermissionDto) {
         return this.roles.linkPermission(dto);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Eliminar un rol' })
+    remove(@Param('id', ParseIntPipe) id: number) {
+        return this.roles.removeRole(id);
     }
 }

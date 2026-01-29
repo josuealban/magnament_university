@@ -98,4 +98,33 @@ export class UserService {
         await this.findById(id);
         return this.securityDb.user.delete({ where: { id } });
     }
+
+    // --- ACTIVIDAD PRÁCTICA ---
+
+    // Parte 2: Operaciones lógicas (Username AND Role AND Activo)
+    async searchAdvanced(username: string, roleName: string) {
+        const where: any = {
+            AND: [
+                { username: { contains: username, mode: 'insensitive' } },
+                { isActive: true },
+            ]
+        };
+
+        if (roleName) {
+            where.AND.push({
+                roles: {
+                    some: {
+                        role: {
+                            name: { contains: roleName, mode: 'insensitive' }
+                        }
+                    }
+                }
+            });
+        }
+
+        return this.securityDb.user.findMany({
+            where,
+            include: { roles: { include: { role: true } } }
+        });
+    }
 }
