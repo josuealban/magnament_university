@@ -25,6 +25,8 @@ Implementación de consultas usando métodos nativos de Prisma (`findMany`).
 | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/subjects/career/1"` | Listado de materias por carrera específica. | Derivada | No |
 | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/teachers/status/multi-subject"` | Docentes con más de una materia asignada. | Derivada | No |
 | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/enrollments/student/1/period/1"` | Historial de matrículas por estudiante y período. | Derivada | No |
+| `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/careers"` | Listar todas las carreras. | Derivada | No |
+| `POST /academic/careers` | Creación de la carrera "Civil Engineering" (ID 2). | Derivada | No |
 
 ### Fase 4: Parte 2 - Operaciones Lógicas
 Uso de operadores `AND`, `OR` y `NOT` para filtros complejos.

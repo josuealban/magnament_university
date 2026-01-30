@@ -108,4 +108,26 @@ Una vez que el servidor devuelve un `201 Created`, la información ha sido confi
 - [x] Operadores Lógicos (20%)
 - [x] Consulta Nativa SQL (20%)
 - [x] Transacciones NestJS (25%)
-- [x] Análisis ACID (10%)
+- [x] Análisis ACID NestJS (10%)
+
+---
+
+## 🛠️ Comandos de Apoyo Adicionales
+| Acción | Comando |
+|--------|---------|
+| **Listar Carreras** | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/careers"` |
+| **Crear Carrera**   | Ver Sección 1.5 abajo |
+
+---
+
+## 🏗️ 1.5 Crear Nueva Carrera (POST)
+```powershell
+$body = @{ 
+    name = "Civil Engineering"
+    totalCycles = 10
+    durationYears = 5
+    specialtyId = 1
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post -Uri "http://localhost:3000/academic/careers" -Body $body -ContentType "application/json"
+```

@@ -86,6 +86,8 @@ Invoke-RestMethod -Method Delete -Uri "http://localhost:3000/academic/enrollment
 | **Materias** | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/subjects"` |
 | **Docentes** | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/teachers"` |
 | **Matrículas** | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/enrollments"` |
+| **Listar Carreras** | `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/careers"` |
+| **Crear Carrera**   | Ver ejemplo POST en Sección 3.4 |
 
 ### Ver detalle con relaciones (Deep View)
 ```powershell
