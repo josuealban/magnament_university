@@ -9,21 +9,25 @@ Implementación de consultas utilizando los métodos nativos de Prisma.
 
 ### 1.1 Listar Estudiantes Activos con su Carrera
 - **Ruta:** `GET /academic/students/status/active`
+- **Ubicación:** [student.service.ts](file:///c:/dev/reinicio_uni/src/academic/student/student.service.ts) -> `findActiveWithCareer()`
+- **Operador ORM:** `findMany`, `where: { isActive: true }`, `include: { career: true }`
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/students/status/active"`
-- **Código:** Usa `findMany({ where: { isActive: true }, include: { career: true } })`.
 
 ### 1.2 Materias asociadas a una Carrera (ID 1)
 - **Ruta:** `GET /academic/subjects/career/1`
+- **Ubicación:** [subject.service.ts](file:///c:/dev/reinicio_uni/src/academic/subject/subject.service.ts) -> `findByCareer()`
+- **Operador ORM:** `findMany`, `where: { careerId: 1 }`
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/subjects/career/1"`
-- **Código:** `subject.findMany({ where: { careerId: 1 } })`.
 
 ### 1.3 Docentes con más de una Asignatura
 - **Ruta:** `GET /academic/teachers/status/multi-subject`
+- **Ubicación:** [teacher.service.ts](file:///c:/dev/reinicio_uni/src/academic/teacher/teacher.service.ts) -> `findMultiSubject()`
+- **Operador ORM:** `findMany`, `include: { subjects: true }`
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/teachers/status/multi-subject"`
-- **Código:** Utiliza `findMany` con un filtro `subjects: { some: {} }` y lógica de conteo en el servicio.
 
 ### 1.4 Matrículas de un estudiante en un período (Estudiante 1, Período 1)
 - **Ruta:** `GET /academic/enrollments/student/1/period/1`
+- **Ubicación:** [enrollment.service.ts](file:///c:/dev/reinicio_uni/src/academic/enrollment/enrollment.service.ts) -> `findByStudentAndPeriod()`
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/enrollments/student/1/period/1"`
 
 ---
@@ -33,10 +37,14 @@ Filtros dinámicos utilizando operadores `AND`, `OR` y `NOT`.
 
 ### 2.1 Búsqueda Avanzada de Estudiantes (AND)
 - **Criterio:** Activos AND Carrera 1 AND Período 1.
+- **Ubicación:** [student.service.ts](file:///c:/dev/reinicio_uni/src/academic/student/student.service.ts) -> `searchAdvanced()`
+- **Operadores Lógicos:** `AND`, `some` (relacional)
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/students/search/advanced?careerId=1&periodId=1"`
 
 ### 2.2 Filtro de Docentes (AND, OR, NOT)
 - **Criterio:** FullTime AND (Con materias OR NOT Inactivo).
+- **Ubicación:** [teacher.service.ts](file:///c:/dev/reinicio_uni/src/academic/teacher/teacher.service.ts) -> `filterAdvanced()`
+- **Operadores Lógicos:** `AND`, `OR`, `NOT`, `some`
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/teachers/filter/advanced"`
 
 ---
@@ -45,6 +53,8 @@ Filtros dinámicos utilizando operadores `AND`, `OR` y `NOT`.
 Generación de reportes complejos mediante `$queryRaw`.
 
 ### 3.1 Reporte de Materias por Estudiante
+- **Ubicación:** [enrollment.service.ts](file:///c:/dev/reinicio_uni/src/academic/enrollment/enrollment.service.ts) -> `getNativeStudentReport()`
+- **Operadores SQL:** `JOIN`, `COUNT()`, `GROUP BY`, `ORDER BY`
 - **Comando:** `Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/enrollments/report/native-stats"`
 - **SQL Ejecutado:**
 ```sql
@@ -62,10 +72,12 @@ ORDER BY "totalSubjects" DESC
 Proceso de matriculación garantizando integridad mediante `$transaction`.
 
 ### 4.1 Flujo de Matriculación
-1. **Validar Estudiante:** Verifica que exista y esté `isActive: true`.
-2. **Validar Cupos:** Verifica que `availableQuota > 0`.
-3. **Registrar:** Crea el registro en la tabla `enrollments`.
-4. **Actualizar:** Realiza un `decrement` de 1 en los cupos de la materia.
+1. **Validar Estudiante:** [enrollment.service.ts](file:///c:/dev/reinicio_uni/src/academic/enrollment/enrollment.service.ts) -> `create()` -> `tx.student.findUnique`.
+2. **Validar Cupos:** `tx.subject.findUnique` -> Verificación de `availableQuota`.
+3. **Registrar:** `tx.enrollment.create`.
+4. **Actualizar:** `tx.subject.update` -> `decrement: 1`.
+
+- **Mecanismo:** `$transaction` (Garantiza Atomicidad).
 
 - **Comando de prueba:**
 ```powershell

@@ -15,9 +15,10 @@ Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/students/stat
 ```
 
 ### 🛠️ Explicación del Código y Funcionalidad
-- **Método Utilizado:** `findMany` con la propiedad `include`.
+- **Ubicación:** [student.service.ts](file:///c:/dev/reinicio_uni/src/academic/student/student.service.ts)
+- **Método:** `findActiveWithCareer()`
+- **Operador ORM:** `findMany`, `where`
 - **Qué hace:** Filtra estudiantes donde `isActive` es `true` y realiza un "Eager Loading" (carga inmediata) de la entidad `career`.
-- **Ubicación:** `student.service.ts` -> `findActiveWithCareer`.
 
 ### 🔄 Flujo de Datos
 1. **Request:** El controlador recibe la petición GET.
@@ -38,9 +39,10 @@ Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/enrollments/r
 ```
 
 ### 🛠️ Explicación del Código y Funcionalidad
-- **Método Utilizado:** `$queryRaw`.
-- **Qué hace:** Ejecuta una consulta compleja con `COUNT`, `JOIN` (estudiantes + carreras + matrículas), `GROUP BY` y concatenación de strings (`||`). Genera un reporte resumido de carga académica.
-- **Ubicación:** `enrollment.service.ts` -> `getNativeStudentReport`.
+- **Ubicación:** [enrollment.service.ts](file:///c:/dev/reinicio_uni/src/academic/enrollment/enrollment.service.ts)
+- **Método:** `getNativeStudentReport()`
+- **Operador SQL:** `$queryRaw`, `JOIN`, `COUNT()`, `GROUP BY`, `ORDER BY`
+- **Qué hace:** Ejecuta una consulta compleja con agregaciones para generar un reporte resumido de carga académica por estudiante.
 
 ### 🛡️ Seguridad
 Se usan **Tagged Templates** (`$queryRaw` + backticks) para prevenir inyecciones SQL mediante la parametrización automática de variables.
@@ -58,9 +60,10 @@ Invoke-RestMethod -Method Get -Uri "http://localhost:3000/academic/students/sear
 ```
 
 ### 🛠️ Explicación del Código y Funcionalidad
-- **Operador:** `AND`.
+- **Ubicación:** [student.service.ts](file:///c:/dev/reinicio_uni/src/academic/student/student.service.ts)
+- **Método:** `searchAdvanced(careerId, periodId)`
+- **Operadores Lógicos:** `AND`, `some` (relacional)
 - **Qué hace:** Busca estudiantes que cumplan tres condiciones simultáneas: 1) Estar activo, 2) Pertenecer a la carrera X, 3) Tener al menos una matrícula en el período Y.
-- **Ubicación:** `student.service.ts` -> `searchAdvanced`.
 
 ---
 
@@ -76,9 +79,10 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:3000/academic/enrollments"
 ```
 
 ### 🛠️ Explicación del Código y Funcionalidad
-- **Método Utilizado:** `$transaction`.
+- **Ubicación:** [enrollment.service.ts](file:///c:/dev/reinicio_uni/src/academic/enrollment/enrollment.service.ts)
+- **Método:** `create(createEnrollmentDto)`
+- **Mecanismo:** `$transaction`
 - **Qué hace:** 1) Valida si el alumno existe y está activo, 2) Verifica cupos de la materia, 3) Crea la matrícula, 4) Descuenta el cupo de la materia. Si falla el descuento de cupo, la matrícula no se guarda.
-- **Ubicación:** `enrollment.service.ts` -> `create`.
 
 ### 🔄 Flujo de Datos (Transacción)
 ```mermaid
