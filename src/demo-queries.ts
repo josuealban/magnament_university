@@ -1,170 +1,164 @@
-import 'dotenv/config';
-import { PrismaClient } from './generated/client-academic';
+﻿import "dotenv/config";
+import { PrismaClient, EmploymentType } from "./generated/client-academic";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-// Configurar URL de conexión si no existe, usando la de Academic por defecto
-if (!process.env.DATABASE_URL && process.env.DATABASE_ACADEMIC_URL) {
-    process.env.DATABASE_URL = process.env.DATABASE_ACADEMIC_URL;
-}
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_ACADEMIC_URL ?? process.env.DATABASE_URL ?? "",
+});
 
 async function main() {
-    // Inicializamos el cliente de Prisma
-    const prisma = new PrismaClient({})
-    console.log('🚀 Iniciando demostración de consultas NestJS/Prisma...\n');
+  const prisma = new PrismaClient({ adapter });
+
+  console.log("🚀 DEMO: Consultas (Derivadas / Lógicas / Nativas) + Transacciones (ACID)\n");
+
+  try {
+    // ======================================================
+    // 1) CONSULTAS DERIVADAS (ORM)
+    // ======================================================
+    console.log("=== 1) Consultas derivadas (ORM) ===");
+
+    const careers = await prisma.career.findMany({
+      take: 5,
+      orderBy: { name: "asc" },
+      include: { specialty: true },
+    });
+    console.log(`✅ findMany Careers: ${careers.length}`);
+    if (careers[0]) console.log(`   Ej: ${careers[0].name} (Specialty: ${careers[0].specialty.name})`);
+
+    const subject = await prisma.subject.findFirst({
+      where: { credits: { gte: 3 } },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, credits: true },
+    });
+    console.log(`✅ findFirst Subject (credits>=3): ${subject ? `${subject.name} (${subject.credits})` : "No encontrada"}`);
+
+    const students = await prisma.student.findMany({
+      where: { isActive: true },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: { career: true },
+    });
+    console.log(`✅ Estudiantes activos: ${students.length}`);
+    if (students[0]) console.log(`   Ej: ${students[0].firstName} -> ${students[0].career.name}`);
+
+    console.log("");
+
+    // ======================================================
+    // 2) OPERACIONES LÓGICAS (AND / OR / NOT)
+    // ======================================================
+    console.log("=== 2) Operaciones lógicas (AND/OR/NOT) ===");
+
+    const teachers = await prisma.teacher.findMany({
+      where: {
+        AND: [{ isActive: true }],
+        OR: [
+          { employmentType: EmploymentType.FULL_TIME },
+          { firstName: { contains: "Dr", mode: "insensitive" } },
+        ],
+        NOT: [{ email: { contains: "spam", mode: "insensitive" } }],
+      },
+      take: 5,
+      orderBy: { lastName: "asc" },
+      select: { firstName: true, lastName: true, email: true, employmentType: true, isActive: true },
+    });
+
+    console.log(`✅ Teachers filtrados: ${teachers.length}`);
+    if (teachers[0]) console.log(`   Ej: ${teachers[0].firstName} ${teachers[0].lastName} (${teachers[0].employmentType})`);
+
+    console.log("");
+
+    // ======================================================
+    // 3) CONSULTAS NATIVAS (SQL) - $queryRaw / $executeRaw
+    // ======================================================
+    console.log("=== 3) Consultas nativas (SQL) ===");
+
+    const activeCount: any = await prisma.$queryRaw`
+      SELECT COUNT(*)::int AS count
+      FROM students
+      WHERE is_active = true
+    `;
+    console.log(`✅ SQL (COUNT students activos): ${activeCount[0]?.count ?? 0}`);
+
+    const fixedRows: number = await prisma.$executeRaw`
+      UPDATE subjects
+      SET available_quota = max_quota
+      WHERE available_quota > max_quota
+    `;
+    console.log(`✅ SQL (UPDATE subjects quotas): filas afectadas = ${fixedRows}`);
+
+    console.log("");
+
+    // ======================================================
+    // 4) TRANSACCIONES + ACID
+    // ======================================================
+    console.log("=== 4) Transacciones (ACID) ===");
+    console.log("ℹ️ Atomicidad: todo o nada | Consistencia: reglas | Aislamiento: concurrencia | Durabilidad: persistencia");
+
+    const career1 = await prisma.career.findFirst({ select: { id: true } });
+    const subject1 = await prisma.subject.findFirst({ select: { id: true } });
+    const period1 = await prisma.academicPeriod.findFirst({ where: { isActive: true }, select: { id: true } });
+
+    if (!career1 || !subject1 || !period1) {
+      console.log("⚠️ Faltan datos base (career/subject/period). Ejecuta tu seed academic primero.");
+      return;
+    }
+
+    const ts = Date.now();
 
     try {
-        // ==========================================
-        // 1. Consultas Derivadas (Fluent API)
-        // ==========================================
-        console.log('--- 1. Consultas Derivadas ---');
-
-        // findMany: Obtener registros con paginación y ordenamiento
-        // Equivalente a: SELECT * FROM careers ORDER BY name ASC LIMIT 5;
-        const careers = await prisma.career.findMany({
-            take: 5,
-            orderBy: { name: 'asc' },
-            include: { specialty: true }, // Eager loading (JOIN)
+      const studentId = await prisma.$transaction(async (tx) => {
+        // A) Crear estudiante (Atomicidad)
+        const student = await tx.student.create({
+          data: {
+            userId: 700000 + Math.floor(Math.random() * 200000),
+            firstName: "Estudiante",
+            lastName: "Tx",
+            email: `tx.${ts}@test.com`,
+            isActive: true,
+            careerId: career1.id,
+          },
         });
-        console.log(`✅ findMany (Carreras): Se encontraron ${careers.length} carreras.`);
-        if (careers.length > 0) {
-            console.log(`   Ejemplo: ${careers[0].name} (Especialidad: ${careers[0].specialty.name})`);
+
+        // B) Validar cupo (Consistencia)
+        const subj = await tx.subject.findUnique({
+          where: { id: subject1.id },
+          select: { availableQuota: true },
+        });
+
+        if (!subj || subj.availableQuota <= 0) {
+          throw new Error("No hay cupo disponible (Consistencia).");
         }
 
-        // findFirst: Obtener el primer registro que cumpla una condición
-        const subject = await prisma.subject.findFirst({
-            where: {
-                credits: { gte: 3 } // "gte" = Greater Than or Equal (Mayor o igual)
-            }
+        // C) Decrementar cupo
+        await tx.subject.update({
+          where: { id: subject1.id },
+          data: { availableQuota: { decrement: 1 } },
         });
-        console.log(`✅ findFirst (Materia >= 3 créditos): ${subject?.name || 'No encontrada'}`);
 
-
-        // ==========================================
-        // 2. Operaciones Lógicas (AND, OR, NOT)
-        // ==========================================
-        console.log('\n--- 2. Operaciones Lógicas ---');
-
-        // Combinación de condiciones
-        const teachers = await prisma.teacher.findMany({
-            where: {
-                OR: [
-                    { employmentType: 'FULL_TIME' },
-                    { firstName: { contains: 'Dr.', mode: 'insensitive' } } // Búsqueda insensible a mayúsculas
-                ],
-                AND: {
-                    isActive: true
-                }
-            },
-            take: 3
+        // D) Crear matrícula (Durabilidad al commit)
+        await tx.enrollment.create({
+          data: {
+            studentId: student.id,
+            subjectId: subject1.id,
+            academicPeriodId: period1.id,
+          },
         });
-        console.log(`✅ Filtro complejo (AND/OR): ${teachers.length} profesores encontrados.`);
 
+        return student.id;
+      });
 
-        // ==========================================
-        // 3. Consultas Nativas (Raw SQL)
-        // ==========================================
-        console.log('\n--- 3. Consultas Nativas (SQL) ---');
-
-        // REPORTE SOLICITADO:
-        // Nombre del estudiante, Carrera, Número total de materias matriculadas
-        // Ordenado por número de materias (descendente)
-        try {
-            console.log('📊 Generando reporte de estudiantes y materias matriculadas...');
-            const studentReport: any[] = await prisma.$queryRaw`
-                SELECT 
-                    s.first_name || ' ' || s.last_name as "Nombre Estudiante",
-                    c.name as "Carrera",
-                    COUNT(e.id)::int as "Total Materias"
-                FROM students s
-                JOIN careers c ON s.career_id = c.id
-                LEFT JOIN enrollments e ON s.id = e.student_id
-                GROUP BY s.id, s.first_name, s.last_name, c.name
-                ORDER BY "Total Materias" DESC
-                LIMIT 5;
-            `;
-
-            console.table(studentReport);
-            console.log(`✅ SQL Nativo Reporte: ${studentReport.length} filas recuperadas.`);
-
-        } catch (e) {
-            console.log('⚠️ SQL Nativo Reporte: Error al ejecutar:', e);
-        }
-
-
-        // ==========================================
-        // 4. Transacciones y Principios ACID
-        // ==========================================
-        console.log('\n--- 4. Transacciones (ACID) ---');
-        console.log('ℹ️ Caso de Uso: Matriculación con validación de cupos (Atomicidad garantizada).');
-
-        const txStudent = await prisma.student.findFirst({ where: { isActive: true } });
-        const txSubject = await prisma.subject.findFirst({ where: { availableQuota: { gt: 0 } } });
-        const txPeriod = await prisma.academicPeriod.findFirst({ where: { isActive: true } });
-
-        if (txStudent && txSubject && txPeriod) {
-            try {
-                const result = await prisma.$transaction(async (tx) => {
-                    // Paso 1: Verificar estudiante activo (Bloqueo pesimista opcional, aquí validación lógica)
-                    // En una transacción real, podríamos volver a consultar para asegurar estado actual.
-                    const studentCheck = await tx.student.findUnique({ where: { id: txStudent.id } });
-                    if (!studentCheck?.isActive) {
-                        throw new Error(`Estudiante ${studentCheck?.id} no está activo.`);
-                    }
-
-                    // Paso 2: Verificar disponibilidad de cupos (LOWER LEVEL LOCKING recommended for production, here logic check)
-                    // Para mayor seguridad en concurrencia real se usaría UPDATE ... WHERE available_quota > 0 con chequeo de filas afectadas.
-                    const subjectCheck = await tx.subject.findUnique({ where: { id: txSubject.id } });
-                    if (!subjectCheck || subjectCheck.availableQuota <= 0) {
-                        throw new Error(`Asignatura ${txSubject.name} sin cupos disponibles.`);
-                    }
-
-                    // Paso 3: Registrar matrícula
-                    const newEnrollment = await tx.enrollment.create({
-                        data: {
-                            studentId: txStudent.id,
-                            subjectId: txSubject.id,
-                            academicPeriodId: txPeriod.id
-                        }
-                    });
-
-                    // Paso 4: Descontar cupo
-                    await tx.subject.update({
-                        where: { id: txSubject.id },
-                        data: {
-                            availableQuota: {
-                                decrement: 1
-                            }
-                        }
-                    });
-
-                    // Simulación de error aleatorio para probar ROLLBACK (50% probabilidad en demo)
-                    // if (Math.random() < 0.5) throw new Error("Error simulado de red durante el cobro.");
-
-                    return newEnrollment;
-                });
-
-                console.log(`✅ Transacción EXITOSA (COMMIT):`);
-                console.log(`   - Estudiante ID ${txStudent.id} matriculado en materia ID ${txSubject.id}.`);
-                console.log(`   - Cupo descontado correctamente.`);
-
-            } catch (error) {
-                // Si falla por "Foreign Key constraint failed" es porque ya está matriculado (Unique constraint)
-                if (error.code === 'P2002') {
-                    console.log(`ℹ️ Transacción abortada: El estudiante ya está matriculado en esta materia (Constraint Unique).`);
-                } else {
-                    console.log(`❌ Transacción FALLIDA (ROLLBACK): ${error.message}`);
-                    console.log(`   - Ningún cambio se aplicó a la base de datos (Cupo intacto).`);
-                }
-            }
-        } else {
-            console.log('⚠️ No se pudo probar la transacción de matrícula: Faltan datos semilla (estudiante, materia o periodo).');
-        }
-
-    } catch (error) {
-        console.error('\n❌ Error General:', error);
-    } finally {
-        // Cerrar conexión
-        await prisma.$disconnect();
+      console.log(`✅ COMMIT: Transacción OK. StudentId=${studentId}`);
+    } catch (e: any) {
+      console.log(`❌ ROLLBACK: Transacción revertida. Motivo: ${e?.message ?? e}`);
     }
+
+    console.log("\n✅ Demo finalizado.");
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-main();
+main().catch((e) => {
+  console.error("❌ Demo error:", e);
+  process.exit(1);
+});
