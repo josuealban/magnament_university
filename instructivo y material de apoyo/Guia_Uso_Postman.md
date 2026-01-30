@@ -5,7 +5,13 @@ Si prefieres usar Postman en lugar de PowerShell, aquí tienes la configuración
 ---
 
 ## 📥 1. Importación Rápida
-Puedes crear una nueva **Colección** en Postman y añadir estas peticiones:
+
+He generado un archivo especial para que no tengas que escribir nada:
+
+1. Busca el archivo `reinicio_uni_postman_collection.json` en la carpeta `instructivo y material de apoyo`.
+2. En Postman, haz clic en el botón superior **"Import"**.
+3. Arrastra ese archivo JSON.
+4. ¡Listo! Tendrás todas las carpetas y peticiones configuradas con un clic.
 
 ### ⚙️ Configuración Global
 - **Base URL:** `http://localhost:3000`
